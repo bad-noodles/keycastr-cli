@@ -1,6 +1,6 @@
 # KeyCastr CLI
 
-A command-line interface for controlling [KeyCastr](https://github.com/keycastr/keycastr) on macOS without modifying the KeyCastr application itself. This tool allows you to toggle, start, stop, and check the status of KeyCastr's keystroke capture functionality directly from the terminal.
+A command-line interface for controlling [KeyCastr](https://github.com/keycastr/keycastr). This tool allows you to toggle, start, stop, and check the status of KeyCastr's keystroke capture functionality directly from the terminal.
 
 ## Overview
 
