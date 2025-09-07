@@ -24,39 +24,8 @@ KeyCastr is a popular macOS application that displays your keystrokes on screen,
 
 ## Installation
 
-### Manual Installation
-
-1. Clone or download this repository:
-
-   ```bash
-   git clone https://github.com/bad-noodles/keycastr-cli
-   cd keycastr-cli
-   ```
-
-2. Make the script executable:
-
-   ```bash
-   chmod +x keycastr-cli
-   ```
-
-3. (Optional) Add to your PATH for system-wide access:
-
-   ```bash
-   # Add the current directory to your PATH
-   echo 'export PATH="$PATH:$(pwd)"' >> ~/.zshrc
-   source ~/.zshrc
-   ```
-
-### Zsh Completions Setup
-
-Enable tab completion for enhanced usability:
-
 ```bash
-# Add to your ~/.zshrc
-eval "$(keycastr-cli install-completions)"
-
-# Then reload your shell
-source ~/.zshrc
+brew install bad-noodles/bad-noodles/keycastr-cli
 ```
 
 ## Usage
