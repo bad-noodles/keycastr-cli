@@ -1,0 +1,43 @@
+#compdef keycastr-cli
+
+# Zsh completion for keycastr-cli
+# To install: copy this file to a directory in your $fpath (e.g., ~/.zsh/completions/)
+# or source it in your ~/.zshrc
+
+_keycastr_cli() {
+    local context state line
+    typeset -A opt_args
+
+    _arguments -C \
+        '1:command:->commands' \
+        '*::arg:->args'
+
+    case $state in
+        (commands)
+            local commands=(
+                'toggle:Toggle capture state (default)'
+                'status:Show current capture status'
+                'start:Start capturing if not already active'
+                'stop:Stop capturing if currently active'
+                'open:Open KeyCastr application'
+                'close:Close KeyCastr application'
+                'running:Check if KeyCastr is running'
+                'help:Show help message'
+                'install-completions:Generate zsh completion script'
+            )
+            _describe 'keycastr-cli commands' commands
+            ;;
+        (args)
+            case $line[1] in
+                (help|install-completions)
+                    # No additional arguments for these commands
+                    ;;
+                (*)
+                    # No additional arguments for other commands
+                    ;;
+            esac
+            ;;
+    esac
+}
+
+compdef _keycastr_cli keycastr-cli

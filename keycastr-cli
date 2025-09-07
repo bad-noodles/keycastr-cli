@@ -1,0 +1,161 @@
+#!/bin/bash
+
+# KeyCastr CLI - Control KeyCastr application and capture state
+# Usage: keycastr-cli [toggle|status|start|stop|open|close|running]
+
+KEYCASTR_PROCESS="KeyCastr"
+
+check_keycastr_running() {
+    if ! pgrep -f "$KEYCASTR_PROCESS" > /dev/null 2>&1; then
+        echo "Error: KeyCastr is not running"
+        exit 1
+    fi
+}
+
+get_current_status() {
+    local menu_item=$(osascript -e 'tell application "System Events" to tell process "KeyCastr" to tell menu "KeyCastr" of menu bar item 1 of menu bar 2 to get title of menu item 3' 2>/dev/null)
+    
+    if [[ "$menu_item" == "Stop Casting" ]]; then
+        echo "capturing"
+    elif [[ "$menu_item" == "Start Casting" ]]; then
+        echo "stopped"
+    else
+        echo "unknown"
+    fi
+}
+
+toggle_capture() {
+    osascript -e 'tell application "System Events" to tell process "KeyCastr" to tell menu "KeyCastr" of menu bar item 1 of menu bar 2 to click menu item 3' >/dev/null 2>&1
+    if [ $? -eq 0 ]; then
+        echo "Toggled KeyCastr capture state"
+    else
+        echo "Error: Failed to toggle KeyCastr"
+        exit 1
+    fi
+}
+
+is_keycastr_running() {
+    pgrep -f "$KEYCASTR_PROCESS" > /dev/null 2>&1
+}
+
+open_keycastr() {
+    if is_keycastr_running; then
+        echo "KeyCastr is already running"
+        return 0
+    fi
+    
+    # Try to open KeyCastr using different methods
+    if open -a KeyCastr 2>/dev/null; then
+        echo "Opened KeyCastr"
+        # Wait a moment for the app to fully launch
+        sleep 2
+    elif osascript -e 'tell application "KeyCastr" to activate' 2>/dev/null; then
+        echo "Opened KeyCastr"
+        sleep 2
+    else
+        echo "Error: Could not open KeyCastr. Make sure it's installed."
+        exit 1
+    fi
+}
+
+close_keycastr() {
+    if ! is_keycastr_running; then
+        echo "KeyCastr is not running"
+        return 0
+    fi
+    
+    # Try to quit KeyCastr gracefully first
+    if osascript -e 'tell application "KeyCastr" to quit' 2>/dev/null; then
+        echo "Closed KeyCastr"
+    else
+        # If graceful quit fails, try force quit
+        if pkill -f "$KEYCASTR_PROCESS" 2>/dev/null; then
+            echo "Force closed KeyCastr"
+        else
+            echo "Error: Could not close KeyCastr"
+            exit 1
+        fi
+    fi
+}
+
+install_completions() {
+    # Find the completion file relative to the script location
+    local script_dir="$(dirname "${BASH_SOURCE[0]}")"
+    local completion_file="$script_dir/_keycastr-cli"
+    
+    if [[ -f "$completion_file" ]]; then
+        cat "$completion_file"
+    else
+        echo "Error: Completion file not found at $completion_file" >&2
+        exit 1
+    fi
+}
+
+case "${1:-toggle}" in
+    "toggle")
+        check_keycastr_running
+        toggle_capture
+        ;;
+    "status")
+        check_keycastr_running
+        get_current_status
+        ;;
+    "start")
+        check_keycastr_running
+        current_status=$(get_current_status)
+        if [[ "$current_status" == "stopped" ]]; then
+            toggle_capture
+        else
+            echo "KeyCastr is already capturing"
+        fi
+        ;;
+    "stop")
+        check_keycastr_running
+        current_status=$(get_current_status)
+        if [[ "$current_status" == "capturing" ]]; then
+            toggle_capture
+        else
+            echo "KeyCastr is already stopped"
+        fi
+        ;;
+    "open")
+        open_keycastr
+        ;;
+    "close")
+        close_keycastr
+        ;;
+    "running")
+        if is_keycastr_running; then
+            echo "KeyCastr is running"
+            exit 0
+        else
+            echo "KeyCastr is not running"
+            exit 1
+        fi
+        ;;
+    "install-completions")
+        install_completions
+        ;;
+    "help"|"-h"|"--help")
+        echo "Usage: keycastr-cli [command]"
+        echo ""
+        echo "Commands:"
+        echo "  toggle               Toggle capture state (default)"
+        echo "  status               Show current capture status"
+        echo "  start                Start capturing if not already active"
+        echo "  stop                 Stop capturing if currently active"
+        echo "  open                 Open KeyCastr application"
+        echo "  close                Close KeyCastr application"
+        echo "  running              Check if KeyCastr is running"
+        echo "  install-completions  Generate zsh completion script"
+        echo "  help                 Show this help message"
+        echo ""
+        echo "To enable completions, add this to your ~/.zshrc:"
+        echo "  eval \"\$(keycastr-cli install-completions)\""
+        ;;
+    *)
+        echo "Error: Unknown command '$1'"
+        echo "Use 'keycastr-cli help' for usage information"
+        exit 1
+        ;;
+esac
